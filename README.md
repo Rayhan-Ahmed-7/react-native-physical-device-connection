@@ -45,25 +45,6 @@ This guide explains how to configure your Linux system to work with an Android d
 
 ---
 
-## Running Your React Native App
-
-1. **Check Your Setup:**
-   Before running your app, it's a good idea to verify that everything is set up correctly. You can do this by running:
-   ```bash
-   npx react-native doctor
-   ```
-   This command checks your development environment and provides recommendations for any issues that need to be addressed.
-
-1. **Android Studio Location:**
-   If `npx react-native doctor` reports that Android Studio is not found, ensure that your Android Studio installation is correctly located. On Linux, you may need to move the `android-studio` folder to `/opt` for proper recognition:
-   ```bash
-   sudo mv ~/path/to/android-studio /opt/android-studio
-   ```
-
-   After moving, make sure to update any environment variables pointing to the Android SDK or Android Studio paths accordingly.
-
----
-
 ## Setting Up on Ubuntu
 
 ### Install Required Packages
@@ -91,6 +72,23 @@ Apply the changes:
 ```bash
 source ~/.bashrc
 ```
+### For Both Ubuntu & Arch or Any Other OS
+
+1. **Check Your Setup:**
+   Before running your app, it's a good idea to verify that everything is set up correctly. You can do this by running:
+   ```bash
+   npx react-native doctor
+   ```
+   This command checks your development environment and provides recommendations for any issues that need to be addressed.
+
+1. **Android Studio Location:**
+   If `npx react-native doctor` reports that Android Studio is not found, ensure that your Android Studio installation is correctly located. On Linux, you may need to move the `android-studio` folder to `/opt` for proper recognition:
+   ```bash
+   sudo mv ~/path/to/android-studio /opt/android-studio
+   ```
+
+   After moving, make sure to update any environment variables pointing to the Android SDK or Android Studio paths accordingly.
+
 
 ### Fixing ADB “No Permissions” Issue on Ubuntu
 
