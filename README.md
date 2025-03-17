@@ -1,7 +1,3 @@
-Got it! Here’s an updated version of your guide, incorporating the additional information about the `adb` permission issues and React Native setup for Arch Linux. 
-
----
-
 # React Native Development on Linux: Ubuntu & Arch Linux
 
 This guide explains how to configure your Linux system to work with an Android device (or emulator) for React Native development. It covers prerequisites, installing and configuring adb, resolving “no permissions” errors, and running your React Native app.
@@ -69,7 +65,6 @@ export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
 export PATH=$PATH:$ANDROID_HOME/tools/bin
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 
-export PATH=$HOME/flutter/bin:$PATH
 ```
 Apply the changes:
 ```bash
@@ -148,7 +143,6 @@ export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
 export PATH=$PATH:$ANDROID_HOME/tools/bin
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 
-export PATH=$HOME/flutter/bin:$PATH
 ```
 Apply changes:
 ```bash
@@ -214,21 +208,42 @@ sudo chmod 4550 /home/rayhan/Android/Sdk/platform-tools/adb
 - `chown root:wheel`: Changes the owner to root and the group to wheel (since you are in the wheel group).
 - `chmod 4550`: Sets the setuid bit (the leading 4) so that whenever `adb` is run, it runs with root privileges, while still only allowing members of the wheel group to execute it.
 
-After that, run:
+**Important:**  
+After running these commands, you might encounter ADB “No Permissions” errors due to issues with the log file created by `adb`. 
+
+1. **Check for ADB “No Permissions” Errors:**
+   - If you see errors like `cannot open /tmp/adb.1000.log: Permission denied`, follow these steps:
+     - Remove any stale log files from `/tmp`:
+       ```bash
+       sudo rm /tmp/adb.1000.log
+       ```
+     - Restart the ADB server:
+       ```bash
+       adb kill-server
+       adb start-server
+       adb devices
+       ```
+   - Ensure that the `/tmp` directory has the correct permissions:
+     ```bash
+     sudo chmod 1777 /tmp
+     ```
+
+2. **Avoid Running ADB as Root:**  
+   The goal is to have correct permissions set via udev rules. Running `adb` as root can lead to further permission issues.
+
+After these steps, try running:
 
 ```bash
-adb kill-server
-adb start-server
 adb devices
 ```
 
-This should start the `adb` server without permission issues.
+This should allow you to start the ADB server without permission issues.
 
 > **Note:** While this workaround may resolve the issue, the ideal approach is to fix the udev rules so that `adb` can run as your normal user without needing SUID. Use this only as a temporary fix if you must.
 
 ---
 
-## Running Your React Native App
+## Running Your React Native App 0.78
 
 1. **Start the Metro Bundler:**
    Open a terminal and run:
@@ -244,26 +259,6 @@ This should start the `adb` server without permission issues.
 
 ---
 
-## Troubleshooting Tips
-
-- **Device Not Listed in `adb devices`:**
-  - Verify that **USB Debugging** is enabled on your device.
-  - Disconnect and reconnect the USB cable.
-  - Recheck your udev rules and reload them.
-  - Confirm your user is in the appropriate group (`plugdev` on Ubuntu or `wheel`/custom on Arch).
-
-- **ADB “No Permissions” Errors:**
-  - Check that your udev rules file has the correct vendor ID and proper file permissions.
-  - Remove any stale log files from `/tmp` (e.g., `sudo rm /tmp/adb.1000.log`).
-  - Avoid running
-
- adb as root. The goal is to have correct permissions set via udev rules.
-
-- **Environment Variables Not Found:**
-  - Ensure your `ANDROID_HOME` and PATH variables are correctly exported in your shell’s configuration file.
-  - Reload your shell configuration (`source ~/.bashrc` or `source ~/.zshrc`).
-
----
 
 ## Additional Considerations
 
@@ -281,5 +276,3 @@ This should start the `adb` server without permission issues.
 By following this guide, you should be able to set up a Linux development environment on both Ubuntu and Arch Linux (with Hyprland) for React Native. This documentation covers device recognition, permission fixes, and running your app, along with troubleshooting common issues. Happy coding!
 
 ---
-
-Feel free to adjust any part of the text to better suit your style or add any other sections you may need!
