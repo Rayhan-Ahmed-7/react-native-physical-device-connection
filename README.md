@@ -1,4 +1,4 @@
-Below is a consolidated guide for setting up React Native development on Linux – with separate sections for Ubuntu and Arch Linux – including details on resolving adb permission issues.
+Got it! Here’s an updated version of your guide, incorporating the additional information about the `adb` permission issues and React Native setup for Arch Linux. 
 
 ---
 
@@ -22,6 +22,7 @@ This guide explains how to configure your Linux system to work with an Android d
    - [Install Required Packages](#install-required-packages-arch)
    - [Configure Environment Variables](#configure-environment-variables-arch)
    - [Fixing ADB “No Permissions” Issue on Arch](#fixing-adb-no-permissions-arch)
+   - [Workaround for ADB Permission Issues](#workaround-for-adb-permission-issues)
 4. [Running Your React Native App](#running-your-react-native-app)
 5. [Troubleshooting Tips](#troubleshooting-tips)
 6. [Additional Considerations](#additional-considerations)
@@ -69,8 +70,6 @@ export PATH=$PATH:$ANDROID_HOME/tools/bin
 export PATH=$PATH:$ANDROID_HOME/platform-tools
 
 export PATH=$HOME/flutter/bin:$PATH
-# For arch only 
-export CHROME_EXECUTABLE=/usr/bin/google-chrome-stable
 ```
 Apply the changes:
 ```bash
@@ -141,8 +140,15 @@ sudo pacman -S android-tools android-udev
 
 In your shell configuration (for example, in `~/.zshrc` if using zsh with Hyprland), add:
 ```bash
+# Android Studio
 export ANDROID_HOME=$HOME/Android/Sdk
-export PATH=$PATH:$ANDROID_HOME/platform-tools:$ANDROID_HOME/tools:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/emulator
+export PATH=$PATH:$ANDROID_HOME/tools
+export PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin
+export PATH=$PATH:$ANDROID_HOME/tools/bin
+export PATH=$PATH:$ANDROID_HOME/platform-tools
+
+export PATH=$HOME/flutter/bin:$PATH
 ```
 Apply changes:
 ```bash
@@ -165,9 +171,9 @@ source ~/.zshrc
    ```
    Add the rule (using your device’s vendor ID):
    ```bash
-   SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", MODE="0666", GROUP="wheel"
+   SUBSYSTEM=="usb", ATTR{idVendor}=="18d1", ATTR{idProduct}=="4ee7", MODE="0660", GROUP="wheel", TAG+="uaccess"
    ```
-   *Tip:* If you’re not in the `plugdev` group on Arch (often not created by default), you can use `wheel` since your user is already in that group. Alternatively, you can create and use a custom group.
+   This ensures that your user in the `wheel` group has the necessary permissions.
 
 3. **Set Rule File Permissions & Reload udev:**
    ```bash
@@ -186,24 +192,52 @@ source ~/.zshrc
    ```
    Your device should now be detected without permission issues.
 
-> **Important:**  
-> If you still encounter permission issues and adb fails to start (for example, errors like “cannot open /tmp/adb.1000.log: Permission denied”), check if a stale log file exists:
-> ```bash
-> sudo rm /tmp/adb.1000.log
-> ```
-> Then restart the adb server.
+---
+
+### Workaround for ADB Permission Issues
+
+If you are still experiencing permission errors even after setting up udev rules, one workaround is to give the `adb` binary elevated privileges so it runs as root when executed by your user. 
+
+**Warning:** This is not the ideal solution from a security standpoint but can resolve the “insufficient permissions” issue.
+
+For example, if your `adb` is located at:
+`/home/rayhan/Android/Sdk/platform-tools/adb`
+
+You can run these commands:
+
+```bash
+sudo chown root:wheel /home/rayhan/Android/Sdk/platform-tools/adb
+sudo chmod 4550 /home/rayhan/Android/Sdk/platform-tools/adb
+```
+
+**What this does:**
+- `chown root:wheel`: Changes the owner to root and the group to wheel (since you are in the wheel group).
+- `chmod 4550`: Sets the setuid bit (the leading 4) so that whenever `adb` is run, it runs with root privileges, while still only allowing members of the wheel group to execute it.
+
+After that, run:
+
+```bash
+adb kill-server
+adb start-server
+adb devices
+```
+
+This should start the `adb` server without permission issues.
+
+> **Note:** While this workaround may resolve the issue, the ideal approach is to fix the udev rules so that `adb` can run as your normal user without needing SUID. Use this only as a temporary fix if you must.
 
 ---
 
 ## Running Your React Native App
 
 1. **Start the Metro Bundler:**
+   Open a terminal and run:
    ```bash
    npm start
    ```
 
 2. **Run the App on Android Device:**
-   In your project folder:
+   In another terminal within your project folder, execute:
    ```bash
    npx react-native run-android
    ```
@@ -221,7 +255,9 @@ source ~/.zshrc
 - **ADB “No Permissions” Errors:**
   - Check that your udev rules file has the correct vendor ID and proper file permissions.
   - Remove any stale log files from `/tmp` (e.g., `sudo rm /tmp/adb.1000.log`).
-  - Avoid running adb as root. The goal is to have correct permissions set via udev rules.
+  - Avoid running
+
+ adb as root. The goal is to have correct permissions set via udev rules.
 
 - **Environment Variables Not Found:**
   - Ensure your `ANDROID_HOME` and PATH variables are correctly exported in your shell’s configuration file.
@@ -245,3 +281,5 @@ source ~/.zshrc
 By following this guide, you should be able to set up a Linux development environment on both Ubuntu and Arch Linux (with Hyprland) for React Native. This documentation covers device recognition, permission fixes, and running your app, along with troubleshooting common issues. Happy coding!
 
 ---
+
+Feel free to adjust any part of the text to better suit your style or add any other sections you may need!
